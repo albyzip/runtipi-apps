@@ -22,7 +22,7 @@ services:
   openproject-proxy:
     container_name: openproject-proxy
     build:
-      context: ${APP_DATA_DIR}/data/proxy
+      context: ${APP_DATA_DIR}/proxy
       args:
         APP_HOST: openproject-web
     restart: unless-stopped
