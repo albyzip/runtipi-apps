@@ -1,20 +1,45 @@
 {
+  "$schema": "../app-info-schema.json",
   "name": "OpenProject",
-  "id": "openproject",
-  "available": true,
-  "short_desc": "Управление проектами с открытым исходным кодом",
-  "author": "OpenProject GmbH",
   "port": 8680,
-  "categories": ["development", "utilities"],
-  "description": "OpenProject - это проектное программное обеспечение с открытым исходным кодом для управления проектами, совместной работы и коммуникации.",
-  "tipi_version": 1,
-  "version": "13.0.1",
-  "source": "https://github.com/opf/openproject",
+  "available": true,
   "exposable": true,
-  "supported_architectures": ["amd64", "arm64"],
-  "created_at": 1724134338800,
-  "updated_at": 1724134338800,
+  "dynamic_config": true,
+  "id": "openproject",
+  "tipi_version": 32,
+  "version": "13.0",
+  "categories": ["development", "utilities"],
+  "description": "OpenProject is an open source project management software. It supports features like project planning and scheduling, roadmap and release planning, task management and time tracking, team collaboration, and many more.",
+  "short_desc": "Open source project management software for project planning, team collaboration, and agile project management.",
+  "author": "OpenProject GmbH",
+  "source": "https://github.com/opf/openproject",
   "form_fields": [
+    {
+      "type": "random",
+      "label": "Database Password",
+      "min": 32,
+      "env_variable": "OPENPROJECT_DB_PASSWORD"
+    },
+    {
+      "type": "random",
+      "label": "Secret Key",
+      "min": 64,
+      "env_variable": "OPENPROJECT_SECRET_KEY"
+    },
+    {
+      "type": "email",
+      "label": "Admin Email",
+      "required": true,
+      "env_variable": "OPENPROJECT_ADMIN_EMAIL"
+    },
+    {
+      "type": "text",
+      "label": "Admin Username",
+      "max": 50,
+      "min": 3,
+      "required": true,
+      "env_variable": "OPENPROJECT_ADMIN_USERNAME"
+    },
     {
       "type": "password",
       "label": "Admin Password",
@@ -23,5 +48,8 @@
       "required": true,
       "env_variable": "OPENPROJECT_ADMIN_PASSWORD"
     }
-  ]
+  ],
+  "supported_architectures": ["arm64", "amd64"],
+  "created_at": 1724134338800,
+  "updated_at": 1724134338800
 }
