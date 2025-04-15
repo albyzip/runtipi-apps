@@ -1,47 +1,182 @@
+version: "3.9"
 services:
-  openproject:
-    image: openproject/community:latest
-    container_name: openproject
+  openproject-db:
+    container_name: openproject-db
+    image: postgres:13
+    restart: unless-stopped
+    stop_grace_period: "3s"
+    volumes:
+      - ${APP_DATA_DIR}/data/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: p4ssw0rd
+      POSTGRES_DB: openproject
+    networks:
+      - tipi_main_network
+
+  openproject-cache:
+    container_name: openproject-cache
+    image: memcached
     restart: unless-stopped
     networks:
       - tipi_main_network
-    environment:
-      - TZ=${TZ}
-      - SECRET_KEY_BASE=${OPENPROJECT_SECRET_KEY}
-      - OPENPROJECT_HOST__NAME=${APP_DOMAIN}
-      - OPENPROJECT_HTTPS=true
-      - OPENPROJECT_ADMIN_EMAIL=${OPENPROJECT_ADMIN_EMAIL}
-      - OPENPROJECT_ADMIN_USERNAME=${OPENPROJECT_ADMIN_USERNAME}
-      - OPENPROJECT_ADMIN_PASSWORD=${OPENPROJECT_ADMIN_PASSWORD}
-    volumes:
-      - ${APP_DATA_DIR}/data/pgdata:/var/openproject/pgdata
-      - ${APP_DATA_DIR}/data/assets:/var/openproject/assets
+
+  openproject-proxy:
+    container_name: openproject-proxy
+    image: openproject/proxy
+    restart: unless-stopped
     ports:
       - ${APP_PORT}:80
+    depends_on:
+      - openproject-web
+    networks:
+      - tipi_main_network
     labels:
-      generated: true
+      # Main
       traefik.enable: true
       traefik.http.middlewares.openproject-web-redirect.redirectscheme.scheme: https
-      traefik.http.services.openproject.loadbalancer.server.port: "80"
+      traefik.http.services.openproject.loadbalancer.server.port: 80
+      # Web
       traefik.http.routers.openproject-insecure.rule: Host(`${APP_DOMAIN}`)
       traefik.http.routers.openproject-insecure.entrypoints: web
       traefik.http.routers.openproject-insecure.service: openproject
       traefik.http.routers.openproject-insecure.middlewares: openproject-web-redirect
+      # Websecure
       traefik.http.routers.openproject.rule: Host(`${APP_DOMAIN}`)
       traefik.http.routers.openproject.entrypoints: websecure
       traefik.http.routers.openproject.service: openproject
       traefik.http.routers.openproject.tls.certresolver: myresolver
+      # Local domain
       traefik.http.routers.openproject-local-insecure.rule: Host(`openproject.${LOCAL_DOMAIN}`)
       traefik.http.routers.openproject-local-insecure.entrypoints: web
       traefik.http.routers.openproject-local-insecure.service: openproject
       traefik.http.routers.openproject-local-insecure.middlewares: openproject-web-redirect
+      # Local domain secure
       traefik.http.routers.openproject-local.rule: Host(`openproject.${LOCAL_DOMAIN}`)
       traefik.http.routers.openproject-local.entrypoints: websecure
       traefik.http.routers.openproject-local.service: openproject
       traefik.http.routers.openproject-local.tls: true
-      runtipi.managed: true
+
+  openproject-web:
+    container_name: openproject-web
+    image: openproject/openproject:15-slim
+    restart: unless-stopped
+    command: "./docker/prod/web"
+    networks:
+      - tipi_main_network
+    depends_on:
+      - openproject-db
+      - openproject-cache
+      - openproject-seeder
+    environment:
+      OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
+      OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
+      OPENPROJECT_HSTS: "true"
+      RAILS_CACHE_STORE: "memcache"
+      OPENPROJECT_CACHE__MEMCACHE__SERVER: "openproject-cache:11211"
+      OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+      DATABASE_URL: "postgres://postgres:p4ssw0rd@openproject-db/openproject?pool=20&encoding=unicode&reconnect=true"
+      RAILS_MIN_THREADS: "4"
+      RAILS_MAX_THREADS: "16"
+      IMAP_ENABLED: "${IMAP_ENABLED:-false}"
+      TZ: ${TZ}
+    volumes:
+      - ${APP_DATA_DIR}/data/assets:/var/openproject/assets
+    labels:
+      - autoheal=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}/health_checks/default"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+  openproject-autoheal:
+    container_name: openproject-autoheal
+    image: willfarrell/autoheal:1.2.0
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_START_PERIOD: 600
+      AUTOHEAL_INTERVAL: 30
+    networks:
+      - tipi_main_network
+
+  openproject-worker:
+    container_name: openproject-worker
+    image: openproject/openproject:15-slim
+    restart: unless-stopped
+    command: "./docker/prod/worker"
+    networks:
+      - tipi_main_network
+    depends_on:
+      - openproject-db
+      - openproject-cache
+      - openproject-seeder
+    environment:
+      OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
+      OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
+      OPENPROJECT_HSTS: "true"
+      RAILS_CACHE_STORE: "memcache"
+      OPENPROJECT_CACHE__MEMCACHE__SERVER: "openproject-cache:11211"
+      OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+      DATABASE_URL: "postgres://postgres:p4ssw0rd@openproject-db/openproject?pool=20&encoding=unicode&reconnect=true"
+      RAILS_MIN_THREADS: "4"
+      RAILS_MAX_THREADS: "16"
+      IMAP_ENABLED: "${IMAP_ENABLED:-false}"
+      TZ: ${TZ}
+    volumes:
+      - ${APP_DATA_DIR}/data/assets:/var/openproject/assets
+
+  openproject-cron:
+    container_name: openproject-cron
+    image: openproject/openproject:15-slim
+    restart: unless-stopped
+    command: "./docker/prod/cron"
+    networks:
+      - tipi_main_network
+    depends_on:
+      - openproject-db
+      - openproject-cache
+      - openproject-seeder
+    environment:
+      OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
+      OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
+      OPENPROJECT_HSTS: "true"
+      RAILS_CACHE_STORE: "memcache"
+      OPENPROJECT_CACHE__MEMCACHE__SERVER: "openproject-cache:11211"
+      OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+      DATABASE_URL: "postgres://postgres:p4ssw0rd@openproject-db/openproject?pool=20&encoding=unicode&reconnect=true"
+      RAILS_MIN_THREADS: "4"
+      RAILS_MAX_THREADS: "16"
+      IMAP_ENABLED: "${IMAP_ENABLED:-false}"
+      TZ: ${TZ}
+    volumes:
+      - ${APP_DATA_DIR}/data/assets:/var/openproject/assets
+
+  openproject-seeder:
+    container_name: openproject-seeder
+    image: openproject/openproject:15-slim
+    restart: on-failure
+    command: "./docker/prod/seeder"
+    networks:
+      - tipi_main_network
+    environment:
+      OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
+      OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
+      OPENPROJECT_HSTS: "true"
+      RAILS_CACHE_STORE: "memcache"
+      OPENPROJECT_CACHE__MEMCACHE__SERVER: "openproject-cache:11211"
+      OPENPROJECT_RAILS__RELATIVE__URL__ROOT: "${OPENPROJECT_RAILS__RELATIVE__URL__ROOT:-}"
+      DATABASE_URL: "postgres://postgres:p4ssw0rd@openproject-db/openproject?pool=20&encoding=unicode&reconnect=true"
+      RAILS_MIN_THREADS: "4"
+      RAILS_MAX_THREADS: "16"
+      IMAP_ENABLED: "${IMAP_ENABLED:-false}"
+      TZ: ${TZ}
+    volumes:
+      - ${APP_DATA_DIR}/data/assets:/var/openproject/assets
 
 networks:
   tipi_main_network:
-    name: runtipi_tipi_main_network
     external: true

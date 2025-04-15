@@ -1,49 +1,47 @@
 {
-  "$schema": "../app-info-schema.json",
   "name": "OpenProject",
-  "port": 8680,
-  "available": true,
-  "exposable": true,
-  "dynamic_config": true,
   "id": "openproject",
-  "tipi_version": 32,
-  "version": "15",
-  "categories": ["development", "utilities"],
-  "description": "OpenProject is the leading open source project management software. It supports features like project planning and scheduling, roadmap and release planning, task management and time tracking, team collaboration, and many more.",
-  "short_desc": "Open source project management software for project planning, team collaboration, and agile project management.",
+  "available": true,
+  "short_desc": "Open source project management and collaboration software",
   "author": "OpenProject GmbH",
-  "source": "https://github.com/opf/openproject",
+  "port": 8081,
+  "categories": ["development", "utilities"],
+  "description": "OpenProject is an open-source project management software designed for teams to collaborate, organize, plan and implement projects together.",
+  "tipi_version": 1,
+  "version": "v15-slim",
+  "source": "https://github.com/opf/openproject-docker-compose",
+  "exposable": true,
+  "supported_architectures": ["arm64", "amd64"],
+  "created_at": 1724134338800,
+  "updated_at": 1724134338800,
   "form_fields": [
     {
-      "type": "random",
-      "label": "Secret Key",
-      "min": 64,
-      "env_variable": "OPENPROJECT_SECRET_KEY"
-    },
-    {
-      "type": "email",
-      "label": "Admin Email",
+      "type": "boolean",
+      "label": "Enable HTTPS",
       "required": true,
-      "env_variable": "OPENPROJECT_ADMIN_EMAIL"
+      "default": false,
+      "env_variable": "OPENPROJECT_HTTPS"
     },
     {
       "type": "text",
-      "label": "Admin Username",
-      "max": 50,
-      "min": 3,
+      "label": "Host Name",
       "required": true,
-      "env_variable": "OPENPROJECT_ADMIN_USERNAME"
+      "default": "localhost",
+      "env_variable": "OPENPROJECT_HOST__NAME"
     },
     {
-      "type": "password",
-      "label": "Admin Password",
-      "max": 50,
-      "min": 8,
+      "type": "text",
+      "label": "Relative URL Root (leave empty if not needed)",
+      "required": false,
+      "default": "",
+      "env_variable": "OPENPROJECT_RAILS__RELATIVE__URL__ROOT"
+    },
+    {
+      "type": "boolean",
+      "label": "Enable IMAP",
       "required": true,
-      "env_variable": "OPENPROJECT_ADMIN_PASSWORD"
+      "default": false,
+      "env_variable": "IMAP_ENABLED"
     }
-  ],
-  "supported_architectures": ["arm64", "amd64"],
-  "created_at": 1724134338800,
-  "updated_at": 1724134338800
+  ]
 }
