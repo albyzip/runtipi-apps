@@ -70,7 +70,6 @@ services:
       - openproject-db
       - openproject-cache
       - openproject-seeder
-      - openproject-init
     environment:
       OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
       OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
@@ -103,7 +102,6 @@ services:
       - openproject-db
       - openproject-cache
       - openproject-seeder
-      - openproject-init
     environment:
       OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
       OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
@@ -130,7 +128,6 @@ services:
       - openproject-db
       - openproject-cache
       - openproject-seeder
-      - openproject-init
     environment:
       OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
       OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
@@ -156,7 +153,6 @@ services:
     depends_on:
       - openproject-db
       - openproject-cache
-      - openproject-init
     environment:
       OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
       OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
