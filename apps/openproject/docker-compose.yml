@@ -33,10 +33,10 @@ services:
     networks:
       - tipi_main_network
     labels:
-      # Main
+      generated: true
       traefik.enable: true
       traefik.http.middlewares.openproject-web-redirect.redirectscheme.scheme: https
-      traefik.http.services.openproject.loadbalancer.server.port: 80
+      traefik.http.services.openproject.loadbalancer.server.port: "3000"
       # Web
       traefik.http.routers.openproject-insecure.rule: Host(`${APP_DOMAIN}`)
       traefik.http.routers.openproject-insecure.entrypoints: web
@@ -57,6 +57,7 @@ services:
       traefik.http.routers.openproject-local.entrypoints: websecure
       traefik.http.routers.openproject-local.service: openproject
       traefik.http.routers.openproject-local.tls: true
+      runtipi.managed: true
 
   openproject-web:
     container_name: openproject-web
