@@ -1,6 +1,6 @@
 services:
   openproject:
-    image: openproject/community:15
+    image: openproject/community:latest
     container_name: openproject
     restart: unless-stopped
     networks:
