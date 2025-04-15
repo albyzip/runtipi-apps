@@ -7,19 +7,13 @@
   "dynamic_config": true,
   "id": "openproject",
   "tipi_version": 32,
-  "version": "13.0",
+  "version": "15",
   "categories": ["development", "utilities"],
-  "description": "OpenProject is an open source project management software. It supports features like project planning and scheduling, roadmap and release planning, task management and time tracking, team collaboration, and many more.",
+  "description": "OpenProject is the leading open source project management software. It supports features like project planning and scheduling, roadmap and release planning, task management and time tracking, team collaboration, and many more.",
   "short_desc": "Open source project management software for project planning, team collaboration, and agile project management.",
   "author": "OpenProject GmbH",
   "source": "https://github.com/opf/openproject",
   "form_fields": [
-    {
-      "type": "random",
-      "label": "Database Password",
-      "min": 32,
-      "env_variable": "OPENPROJECT_DB_PASSWORD"
-    },
     {
       "type": "random",
       "label": "Secret Key",
