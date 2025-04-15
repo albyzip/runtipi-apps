@@ -1,63 +1,65 @@
 version: "3.9"
 services:
   openproject:
-    container_name: openproject
     image: openproject/community:13.0
+    container_name: openproject
     restart: unless-stopped
-    environment:
-      - TZ=${TZ}
-      - OPENPROJECT_HOST__NAME=${APP_DOMAIN}
-      - OPENPROJECT_HTTPS=true
-      - OPENPROJECT_ADMIN_PASSWORD=${OPENPROJECT_ADMIN_PASSWORD}
-      - OPENPROJECT_EDITION=standard
-      - DATABASE_URL=postgres://postgres:postgres@openproject-db:5432/openproject
-    volumes:
-      - ${APP_DATA_DIR}/data/assets:/var/openproject/assets
-    ports:
-      - ${APP_PORT}:80
-    depends_on:
-      - openproject-db
     networks:
       - tipi_main_network
+    environment:
+      - TZ=${TZ}
+      - SECRET_KEY_BASE=secret
+      - OPENPROJECT_HOST__NAME=${APP_DOMAIN}
+      - OPENPROJECT_HTTPS=true
+      - OPENPROJECT_ADMIN_EMAIL=${OPENPROJECT_ADMIN_EMAIL}
+      - OPENPROJECT_ADMIN_USERNAME=${OPENPROJECT_ADMIN_USERNAME}
+      - OPENPROJECT_ADMIN_PASSWORD=${OPENPROJECT_ADMIN_PASSWORD}
+      - DATABASE_URL=postgres://openproject:openproject@openproject-db:5432/openproject
+    ports:
+      - ${APP_PORT}:80
+    volumes:
+      - ${APP_DATA_DIR}/data/openproject:/var/openproject/assets
+    depends_on:
+      - openproject-db
     labels:
-      # Main
+      generated: true
       traefik.enable: true
       traefik.http.middlewares.openproject-web-redirect.redirectscheme.scheme: https
-      traefik.http.services.openproject.loadbalancer.server.port: 80
-      # Web
+      traefik.http.services.openproject.loadbalancer.server.port: "80"
       traefik.http.routers.openproject-insecure.rule: Host(`${APP_DOMAIN}`)
       traefik.http.routers.openproject-insecure.entrypoints: web
       traefik.http.routers.openproject-insecure.service: openproject
       traefik.http.routers.openproject-insecure.middlewares: openproject-web-redirect
-      # Websecure
       traefik.http.routers.openproject.rule: Host(`${APP_DOMAIN}`)
       traefik.http.routers.openproject.entrypoints: websecure
       traefik.http.routers.openproject.service: openproject
       traefik.http.routers.openproject.tls.certresolver: myresolver
-      # Local domain
       traefik.http.routers.openproject-local-insecure.rule: Host(`openproject.${LOCAL_DOMAIN}`)
       traefik.http.routers.openproject-local-insecure.entrypoints: web
       traefik.http.routers.openproject-local-insecure.service: openproject
       traefik.http.routers.openproject-local-insecure.middlewares: openproject-web-redirect
-      # Local domain secure
       traefik.http.routers.openproject-local.rule: Host(`openproject.${LOCAL_DOMAIN}`)
       traefik.http.routers.openproject-local.entrypoints: websecure
       traefik.http.routers.openproject-local.service: openproject
       traefik.http.routers.openproject-local.tls: true
+      runtipi.managed: true
 
   openproject-db:
-    container_name: openproject-db
     image: postgres:13
+    container_name: openproject-db
     restart: unless-stopped
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=openproject
-    volumes:
-      - ${APP_DATA_DIR}/data/pgdata:/var/lib/postgresql/data
     networks:
       - tipi_main_network
+    environment:
+      POSTGRES_USER: openproject
+      POSTGRES_PASSWORD: openproject
+      POSTGRES_DB: openproject
+    volumes:
+      - ${APP_DATA_DIR}/data/postgres:/var/lib/postgresql/data
+    labels:
+      runtipi.managed: true
 
 networks:
   tipi_main_network:
+    name: runtipi_tipi_main_network
     external: true
