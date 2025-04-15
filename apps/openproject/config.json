@@ -1,0 +1,27 @@
+{
+  "name": "OpenProject",
+  "id": "openproject",
+  "available": true,
+  "short_desc": "Управление проектами с открытым исходным кодом",
+  "author": "OpenProject GmbH",
+  "port": 8680,
+  "categories": ["development", "utilities"],
+  "description": "OpenProject - это проектное программное обеспечение с открытым исходным кодом для управления проектами, совместной работы и коммуникации.",
+  "tipi_version": 1,
+  "version": "13.0.1",
+  "source": "https://github.com/opf/openproject",
+  "exposable": true,
+  "supported_architectures": ["amd64", "arm64"],
+  "created_at": 1724134338800,
+  "updated_at": 1724134338800,
+  "form_fields": [
+    {
+      "type": "password",
+      "label": "Admin Password",
+      "max": 50,
+      "min": 8,
+      "required": true,
+      "env_variable": "OPENPROJECT_ADMIN_PASSWORD"
+    }
+  ]
+}
