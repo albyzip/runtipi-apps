@@ -28,15 +28,16 @@ services:
     restart: unless-stopped
     ports:
       - ${APP_PORT}:80
+      - 3000:3000
     depends_on:
       - openproject-web
     networks:
       - tipi_main_network
     labels:
-      generated: true
+      # Main
       traefik.enable: true
       traefik.http.middlewares.openproject-web-redirect.redirectscheme.scheme: https
-      traefik.http.services.openproject.loadbalancer.server.port: "3000"
+      traefik.http.services.openproject.loadbalancer.server.port: 3000
       # Web
       traefik.http.routers.openproject-insecure.rule: Host(`${APP_DOMAIN}`)
       traefik.http.routers.openproject-insecure.entrypoints: web
@@ -57,7 +58,6 @@ services:
       traefik.http.routers.openproject-local.entrypoints: websecure
       traefik.http.routers.openproject-local.service: openproject
       traefik.http.routers.openproject-local.tls: true
-      runtipi.managed: true
 
   openproject-web:
     container_name: openproject-web
@@ -70,6 +70,7 @@ services:
       - openproject-db
       - openproject-cache
       - openproject-seeder
+      - openproject-init
     environment:
       OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
       OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
@@ -91,7 +92,6 @@ services:
       retries: 3
       start_period: 30s
 
-
   openproject-worker:
     container_name: openproject-worker
     image: openproject/openproject:15-slim
@@ -103,6 +103,7 @@ services:
       - openproject-db
       - openproject-cache
       - openproject-seeder
+      - openproject-init
     environment:
       OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
       OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
@@ -129,6 +130,7 @@ services:
       - openproject-db
       - openproject-cache
       - openproject-seeder
+      - openproject-init
     environment:
       OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
       OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
@@ -151,6 +153,10 @@ services:
     command: "./docker/prod/seeder"
     networks:
       - tipi_main_network
+    depends_on:
+      - openproject-db
+      - openproject-cache
+      - openproject-init
     environment:
       OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS:-false}"
       OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST__NAME:-localhost}"
