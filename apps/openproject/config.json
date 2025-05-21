@@ -8,6 +8,7 @@
   "categories": ["development", "utilities"],
   "description": "OpenProject is an open-source project management software designed for teams to collaborate, organize, plan and implement projects together.",
   "tipi_version": 1,
+  "dynamic_config": true,
   "version": "v15-slim",
   "source": "https://github.com/opf/openproject-docker-compose",
   "exposable": true,
